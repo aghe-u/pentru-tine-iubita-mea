@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vrei să fii Valentine-ul meu? ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fff0f3;
+            font-family: 'Quicksand', sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        .cursive {
+            font-family: 'Dancing Script', cursive;
+        }
+        .container-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffccd5;
+            width: 90%;
+            max-width: 350px;
+            position: relative;
+            z-index: 10;
+        }
+        #noButton {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            touch-action: none;
+            position: relative;
+        }
+        .bg-heart {
+            position: fixed;
+            bottom: -50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatHeart 5s linear forwards;
+        }
+        @keyframes floatHeart {
+            0% { transform: translateY(0) rotate(0); opacity: 0.8; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff4d4d;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- Fundal decorativ -->
+    <div id="hearts-container"></div>
+
+    <!-- Cardul Principal -->
+    <div id="main-card" class="container-card text-center p-8 rounded-3xl shadow-2xl">
+        <h1 class="text-4xl font-bold text-red-600 mb-6 cursive">Te roooog... ❤️</h1>
+        <h2 class="text-xl font-bold text-gray-800 mb-10 px-2">Vrei să fii Valentine-ul meu?</h2>
+
+        <div id="buttons-area" class="flex flex-col gap-4 items-center justify-center min-h-[150px]">
+            <button id="yesButton" class="w-full max-w-[200px] bg-red-500 text-white py-4 rounded-full text-xl font-bold shadow-lg active:scale-90 transition-transform">
+                DA! 😍
+            </button>
+            
+            <button id="noButton" class="w-full max-w-[200px] bg-gray-200 text-gray-500 py-4 rounded-full text-xl font-bold shadow-md">
+                Nu
+            </button>
+        </div>
+    </div>
+
+    <!-- Ecranul de Succes -->
+    <div id="success-screen" class="hidden fixed inset-0 flex flex-col items-center justify-center text-center bg-red-50 z-[100] p-6">
+        <h1 class="text-6xl font-bold text-red-600 mb-4 cursive">YEEEEEY! ❤️</h1>
+        <p class="text-2xl text-red-500 font-bold uppercase tracking-widest mb-10">Te iubesc! 🌹</p>
+
+        <div class="w-full max-w-sm">
+            <button id="btnLove" class="w-full bg-pink-500 text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-lg active:scale-95 mb-4">
+                Mesaj special pentru tine ✨
+            </button>
+
+            <div id="aiBox" class="hidden p-5 bg-white rounded-3xl shadow-inner border-2 border-pink-100 relative min-h-[100px] flex items-center justify-center">
+                <div id="aiLoading" class="hidden absolute inset-0 flex items-center justify-center bg-white/90 rounded-3xl">
+                    <div class="loader"></div>
+                </div>
+                <p id="aiText" class="text-lg text-gray-800 italic cursive"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; 
+        const yesBtn = document.getElementById('yesButton');
+        const noBtn = document.getElementById('noButton');
+        const mainCard = document.getElementById('main-card');
+        const successScreen = document.getElementById('success-screen');
+
+        // Funcție pentru mișcarea butonului "Nu" specială pentru mobile
+        const moveNoButton = (e) => {
+            if (e) e.preventDefault();
+            
+            // Calculăm limitele în interiorul cardului sau puțin pe lângă el
+            const cardRect = mainCard.getBoundingClientRect();
+            const btnWidth = noBtn.offsetWidth;
+            const btnHeight = noBtn.offsetHeight;
+
+            // Îl mutăm într-o poziție aleatorie, dar vizibilă pe ecran
+            const maxX = window.innerWidth - btnWidth - 20;
+            const maxY = window.innerHeight - btnHeight - 20;
+
+            const randomX = Math.random() * maxX;
+            const randomY = Math.random() * maxY;
+
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
+            noBtn.style.margin = '0';
+        };
+
+        // Detectăm încercarea de atingere sau mouse
+        noBtn.addEventListener('touchstart', moveNoButton);
+        noBtn.addEventListener('mouseover', moveNoButton);
+
+        // DA!
+        yesBtn.addEventListener('click', () => {
+            mainCard.style.display = 'none';
+            successScreen.classList.remove('hidden');
+            
+            const end = Date.now() + 5000;
+            const colors = ['#ff0000', '#ff69b4'];
+
+            (function frame() {
+                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors });
+                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        });
+
+        // Gemini AI
+        async function fetchLoveNote() {
+            const aiBox = document.getElementById('aiBox');
+            const aiText = document.getElementById('aiText');
+            const aiLoading = document.getElementById('aiLoading');
+
+            aiBox.classList.remove('hidden');
+            aiLoading.classList.remove('hidden');
+            aiText.innerText = "";
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Scrie un mesaj scurt, romantic si cald de dragoste, maxim 15 cuvinte, in romana." }] }],
+                        systemInstruction: { parts: [{ text: "Esti un iubit plin de admiratie. Scrie mesaje scurte care sa topeasca inima." }] }
+                    })
+                });
+                const data = await response.json();
+                aiText.innerText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Ești totul pentru mine! ❤️";
+            } catch (e) {
+                aiText.innerText = "Te iubesc enorm! ❤️";
+            } finally {
+                aiLoading.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('btnLove').addEventListener('click', fetchLoveNote);
+
+        // Decor fundal
+        setInterval(() => {
+            const h = document.createElement('div');
+            h.className = 'bg-heart';
+            h.innerHTML = '❤️';
+            h.style.left = Math.random() * 100 + 'vw';
+            h.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            document.body.appendChild(h);
+            setTimeout(() => h.remove(), 5000);
+        }, 600);
+    </script>
+</body>
+</html>
